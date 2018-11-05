@@ -358,6 +358,17 @@ class ProxyRequestHandler(BaseHTTPRequestHandler):
                 print with_color(32, "==== RESPONSE BODY ====\n%s\n" % res_body_text)
 
     def request_handler(self, req, req_body):
+	user_agent_blacklist = ["Go-http-client/1.1"]
+
+	user_agent = req.headers.get('User-Agent', '')
+	if user_agent in user_agent_blacklist:
+		print with_color(31, "Block user agent: " % user_agent)
+		return false
+
+        if req_body is not None:
+            if req_body.find("SSH-2.0-OpenSSH_") != -1:
+		print with_color(31, "SSH header found")
+                return false
         pass
 
     def response_handler(self, req, req_body, res, res_body):
@@ -372,7 +383,7 @@ def test(HandlerClass=ProxyRequestHandler, ServerClass=ThreadingHTTPServer, prot
         port = int(sys.argv[1])
     else:
         port = 8080
-    server_address = ('::1', port)
+    server_address = ('::', port)
 
     HandlerClass.protocol_version = protocol
     httpd = ServerClass(server_address, HandlerClass)
